@@ -6,18 +6,19 @@ export const info = {
     name: 'WatchRPC',
     auther: 'WaterWolf5918',
     config: {
-        useServiceName: false,
+        useServiceName: true,
         // clientId: '1279158270182948895'
-        clientId: '995095535709081670'
+        clientId: '995095535709081670',
+        overrideSpotify: false
     }
 }
 
 // const rpc = new Client({ clientId: info.config.clientId });
+let lastUpdate
 let client: Client;
 export const start = function(modules: defaultModules){
     console.log('[WatchRPC] Hello World!')
-
-
+    lastUpdate = Date.now();
 
 
     // .catch(() => {
@@ -43,11 +44,15 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
     const end = start + (metadata.time.totalTime * 1000)
     const service = serviceByService(metadata.auth.service);
     const now = Date.now();
+    console.log((now - lastUpdate) / 1000 );
+    if (((now - lastUpdate) / 1000) <= 5) {return}
+
+
     if (!client){
         client = new Client({ clientId: info.config.clientId })
         client.login();
     }
-    if (client.clientId !== service.id){
+    if (info.config.useServiceName && client.clientId !== service.id ){
         client.destroy();
         client = new Client({ clientId: service.id })
         client.login();
@@ -70,6 +75,7 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
         "endTimestamp": now + metadata.time.totalTime * 1000,
         "type": service.type,
     })
+    lastUpdate = Date.now();
 }
 
 
@@ -110,7 +116,10 @@ export const stateUpdate = function (modules: defaultModules, playerState: Playe
 function serviceByService(service: 'spicetify' | 'youtubeUserscript' | string){
     switch (service){
         case 'spicetify':
-            return {type: 2, label: 'Spotify', id: '1313101111044870144'}
+            if (info.config.overrideSpotify){
+                return {type: 2, label: 'Spotify', id: '1313101111044870144'}
+            }
+            return {type: 0, label: 'WatchRPC',id: '995095535709081670'}
         break;
         case 'youtubeUserscript':
             return {type: 3, label: 'Youtube',id: '1313100797969694732'}
