@@ -42,6 +42,7 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
     const start = Math.round(Date.now() / 1000)
     const end = start + (metadata.time.totalTime * 1000)
     const service = serviceByService(metadata.auth.service);
+    const now = Date.now();
     if (!client){
         client = new Client({ clientId: info.config.clientId })
         client.login();
@@ -51,15 +52,13 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
         client = new Client({ clientId: service.id })
         client.login();
     }
-    const now = Date.now();
+    
     console.log(metadata.time);
     client.user?.setActivity({
-        //@ts-ignore
-        name: 'test',
         details: `${metadata.data.title}`,
-        state: `By ${metadata.data.creator}`,
+        state: `${metadata.data.creator} [⏵]`,
         largeImageKey: `${metadata.data.thumbnail}`,
-        smallImageKey: 'ytlogo4',
+        smallImageKey: metadata.data.thumbnail2 ?? 'ytlogo4',
         smallImageText: 'WatchRPC (OpenMediaShare)',
         largeImageText: `${metadata.time.formattedTime} | ${Math.round(
             metadata.time.timePercent,
@@ -70,12 +69,43 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
         "startTimestamp": now - metadata.time.curruntTime * 1000,
         "endTimestamp": now + metadata.time.totalTime * 1000,
         "type": service.type,
-
     })
-
-
 }
 
+
+export const stateUpdate = function (modules: defaultModules, playerState: PlayerState) {
+    console.log(playerState);
+    const metadata = modules.infoStore.info;
+    const now = Date.now();
+    const service = serviceByService(metadata.auth.service);
+    let icon;
+    switch (playerState){
+        case 'playing':
+        icon = '⏵';
+        break;
+        case 'paused':
+        icon = '⏸';
+        break;
+        case 'unknown':
+        icon = '?';
+        break;
+    }
+    client.user?.setActivity({
+        details: `${metadata.data.title}`,
+        state: `${metadata.data.creator} [${icon}]`,
+        largeImageKey: `${metadata.data.thumbnail}`,
+        smallImageKey: metadata.data.thumbnail2 ?? 'ytlogo4',
+        smallImageText: 'WatchRPC (OpenMediaShare)',
+        largeImageText: `${metadata.time.formattedTime} | ${Math.round(
+            metadata.time.timePercent,
+        )}%`,
+        buttons: [{ label: 'Watch Video', url: `${metadata.data.url}` }],
+        instance: false,
+        // metadata is stored in seconds so we need to convert that to millseconds before using it for timestamps
+
+        "type": service.type,
+    })
+}
 
 function serviceByService(service: 'spicetify' | 'youtubeUserscript' | string){
     switch (service){

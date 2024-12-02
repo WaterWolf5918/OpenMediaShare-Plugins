@@ -4,11 +4,15 @@ import 'oms-sharedtypes'
 import { TypedEventEmitter } from './types';
 interface defaultModules {
     electron: typeof electron
-    store: TypedEventEmitter<LocalEventTypes>
+    infoStore: InfoStore
     express: Express
 }
 
-
+export class InfoStore extends TypedEventEmitter<LocalEventTypes> {
+    info: VideoMetadata;
+    
+    
+}
 
 
 type LocalEventTypes = {
@@ -18,8 +22,8 @@ type LocalEventTypes = {
     timeUpdated: [
         time: VideoMetadata['time']
     ]
-    extraUpdated: [
-        extra: VideoMetadata['auth']
+    authUpdated: [
+        auth: VideoMetadata['auth']
     ],
     infoUpdated: [
         info: VideoMetadata
