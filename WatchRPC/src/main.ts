@@ -1,4 +1,4 @@
-import { defaultModules } from './index';
+import { defaultModules, PluginConfigHelper } from './index';
 // import * as DiscordRPC from 'discord-rpc';
 
 import { Client } from "@xhayper/discord-rpc";
@@ -6,60 +6,50 @@ export const info = {
     name: 'WatchRPC',
     auther: 'WaterWolf5918',
     version: 0.1,
-    config: {
-        useServiceName: true,
-        // clientId: '1279158270182948895'
-        clientId: '995095535709081670',
-        overrideSpotify: false
-    }
+    configBuilder: {
+        pages: {
+            Main: [
+                {id:'useServiceName',displayName: 'Use Service Name', type: 'checkbox', required: true, default: true},
+                {id:'clientId',displayName: 'Discord Client ID', type: 'text', required: true, default: '995095535709081670'},
+                {id:'overrideSpotify',displayName: 'Override Spotify', type: 'checkbox', required: true, default: false}
+            ]
+        }
+    },
+    // config: {
+    //     useServiceName: true,
+    //     // clientId: '1279158270182948895'
+    //     clientId: '995095535709081670',
+    //     overrideSpotify: true
+    // }
 }
 
 // const rpc = new Client({ clientId: info.config.clientId });
 let lastUpdate
 let client: Client;
+
 export const start = function(modules: defaultModules){
     console.log('[WatchRPC] Hello World!')
     lastUpdate = Date.now();
 
-
-    // .catch(() => {
-    //     // PushError("[DiscordRPC] RPC login failed. Is discord open ?",err.toString())
-    //     console.log('[WatchRPC] RPC login failed, Please Forgive me :(')
-    //     // console.log('[WatchRPC] Stopping Plugin')
-    //     // stop();
-    //     // return 1
-    // })
-
-
-    // rpc.on('ready',() => {
-    //     console.log(`[WatchRPC] Logged in as ${rpc.user.username}`)
-    // })
-
-
-
-    // rpc.login()
 }
 
-export const infoUpdate = function(modules: defaultModules, metadata: VideoMetadata){
+export const infoUpdate = function(modules: defaultModules, metadata: VideoMetadata, configHelper: PluginConfigHelper){
     const start = Math.round(Date.now() / 1000)
     const end = start + (metadata.time.totalTime * 1000)
-    const service = serviceByService(metadata.auth.service);
+    const service = serviceByService(metadata.auth.service,configHelper.get('overrideSpotify'));
     const now = Date.now();
-    // console.log((now - lastUpdate) / 1000 );
     if (((now - lastUpdate) / 1000) <= 5) {return}
 
-
     if (!client){
-        client = new Client({ clientId: info.config.clientId })
+        client = new Client({ clientId: configHelper.get('clientId') })
         client.login();
     }
-    if (info.config.useServiceName && client.clientId !== service.id ){
+    if (configHelper.get('useServiceName') && client.clientId !== service.id ){
         client.destroy();
         client = new Client({ clientId: service.id })
         client.login();
     }
     
-    // console.log(metadata.time);
     client.user?.setActivity({
         details: `${metadata.data.title}`,
         state: `${metadata.data.creator} [⏵]`,
@@ -72,19 +62,20 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
         buttons: [{ label: 'Watch Video', url: `${metadata.data.url}` }],
         instance: false,
         // metadata is stored in seconds so we need to convert that to millseconds before using it for timestamps
-        "startTimestamp": now - metadata.time.curruntTime * 1000,
-        "endTimestamp": now + metadata.time.totalTime * 1000,
+        "startTimestamp": now - (metadata.time.curruntTime * 1000),
+        // idk why but this fixes discord timestamps difting 
+        "endTimestamp": now + ((metadata.time.totalTime * 1000) - (metadata.time.curruntTime * 1000)),
         "type": service.type,
     })
     lastUpdate = Date.now();
 }
 
 
-export const stateUpdate = function (modules: defaultModules, playerState: PlayerState) {
+export const stateUpdate = function (modules: defaultModules, playerState: PlayerState, configHelper: PluginConfigHelper) {
     // console.log(playerState);
     const metadata = modules.infoStore.info;
     const now = Date.now();
-    const service = serviceByService(metadata.auth.service);
+    const service = serviceByService(metadata.auth.service,configHelper.get('overrideSpotify'));
     let icon;
     switch (playerState){
         case 'playing':
@@ -114,13 +105,13 @@ export const stateUpdate = function (modules: defaultModules, playerState: Playe
     })
 }
 
-function serviceByService(service: 'spicetify' | 'youtubeUserscript' | string){
+function serviceByService(service: 'spicetify' | 'youtubeUserscript' | string, overrideSpotify){
     switch (service){
         case 'spicetify':
-            if (info.config.overrideSpotify){
+            if (overrideSpotify){
                 return {type: 2, label: 'Spotify', id: '1313101111044870144'}
             }
-            return {type: 0, label: 'WatchRPC',id: '995095535709081670'}
+            return {type: 2, label: 'WatchRPC',id: '995095535709081670'}
         break;
         case 'youtubeEmbedUserscript':
             return {type: 3, label: 'Youtube',id: '1313100797969694732'}

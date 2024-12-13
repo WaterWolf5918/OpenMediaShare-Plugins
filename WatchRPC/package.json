@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && rollup --config",
-    "copy": "npm run build && cp .\\bundle.js %userprofile%\\.openMediaShare\\plugins\\openMediaShare.js --force"
+    "copy": "npm run build && cp .\\bundle.js \"%userprofile%\\.openMediaShare\\plugins\\WatchRPC.js\" --force"
   },
   "keywords": [],
   "author": "",
