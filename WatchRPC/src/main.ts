@@ -5,6 +5,7 @@ import { Client } from "@xhayper/discord-rpc";
 export const info = {
     name: 'WatchRPC',
     auther: 'WaterWolf5918',
+    version: 0.1,
     config: {
         useServiceName: true,
         // clientId: '1279158270182948895'
@@ -44,7 +45,7 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
     const end = start + (metadata.time.totalTime * 1000)
     const service = serviceByService(metadata.auth.service);
     const now = Date.now();
-    console.log((now - lastUpdate) / 1000 );
+    // console.log((now - lastUpdate) / 1000 );
     if (((now - lastUpdate) / 1000) <= 5) {return}
 
 
@@ -58,7 +59,7 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
         client.login();
     }
     
-    console.log(metadata.time);
+    // console.log(metadata.time);
     client.user?.setActivity({
         details: `${metadata.data.title}`,
         state: `${metadata.data.creator} [⏵]`,
@@ -80,7 +81,7 @@ export const infoUpdate = function(modules: defaultModules, metadata: VideoMetad
 
 
 export const stateUpdate = function (modules: defaultModules, playerState: PlayerState) {
-    console.log(playerState);
+    // console.log(playerState);
     const metadata = modules.infoStore.info;
     const now = Date.now();
     const service = serviceByService(metadata.auth.service);
@@ -121,6 +122,8 @@ function serviceByService(service: 'spicetify' | 'youtubeUserscript' | string){
             }
             return {type: 0, label: 'WatchRPC',id: '995095535709081670'}
         break;
+        case 'youtubeEmbedUserscript':
+            return {type: 3, label: 'Youtube',id: '1313100797969694732'}
         case 'youtubeUserscript':
             return {type: 3, label: 'Youtube',id: '1313100797969694732'}
         break;
